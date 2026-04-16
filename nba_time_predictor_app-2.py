@@ -270,8 +270,6 @@ with col_sec:
 with col_btn:
     run = st.button("Predict")
 
-run = st.button("Predict", type="primary", use_container_width=True)
-
 if run:
     with st.spinner("Running prediction…"):
         result, err_msg = predict(
