@@ -14,7 +14,6 @@ from sklearn.tree import plot_tree
 
 st.set_page_config(
     page_title="NBA Time Remaining Predictor",
-    page_icon="🏀",
     layout="centered",
 )
 
@@ -216,9 +215,9 @@ if "loaded" not in st.session_state:
     st.session_state.loaded = False
 
 if not st.session_state.loaded:
-    st.success(f"Ready — {pbp['game_id'].nunique():,} games loaded.", icon="✅")
+    st.success(f"Ready — {pbp['game_id'].nunique():,} games loaded.")
     st.session_state.loaded = True
-    
+
 game_matchups = (
     pbp.groupby("game_id")["teamTricode"]
     .apply(lambda x: sorted(set(x.dropna().astype(str))))
