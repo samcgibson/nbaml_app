@@ -217,32 +217,53 @@ game_matchups = (
     .to_dict()
 )
 
+all_ids = pbp["game_id"].unique().tolist()
+test_ids = [gid for gid in all_ids if gid not in train_games]
+
 col_id, col_model = st.columns([1, 1])
 
-with col_id:
-    all_ids = pbp["game_id"].unique().tolist()
-    
-    # Filter the list down to only IDs that were held out of the train_test_split
-    test_ids = [gid for gid in all_ids if gid not in train_games]
-    
+# --- COMPACT CONTROL BAR ---
+
+col_game, col_model, col_min, col_sec, col_btn = st.columns([3, 1.5, 1, 1, 1])
+
+with col_game:
     game_id = st.selectbox(
-        "Game (Test Data Only)",
+        "Game",
         options=test_ids,
-        format_func=lambda gid: f"{game_matchups.get(gid, gid)} ({gid})"
+        format_func=lambda gid: game_matchups.get(gid, gid),
+        label_visibility="collapsed"
     )
 
 with col_model:
     model = st.selectbox(
         "Model",
         options=["rf", "lr"],
-        format_func=lambda x: "Random Forest" if x == "rf" else "Ridge Regression",
+        format_func=lambda x: "RF" if x == "rf" else "Ridge",
+        label_visibility="collapsed"
     )
 
-col_id, col_model, col_min, col_sec = st.columns([2, 1, 1, 1])
 with col_min:
-    minutes_remaining = st.number_input("Minutes left (Q4)", min_value=0, max_value=12, value=4, step=1)
+    minutes_remaining = st.number_input(
+        "Min",
+        min_value=0,
+        max_value=12,
+        value=4,
+        step=1,
+        label_visibility="collapsed"
+    )
+
 with col_sec:
-    seconds_remaining = st.number_input("Seconds left (Q4)", min_value=0, max_value=59, value=0, step=1)
+    seconds_remaining = st.number_input(
+        "Sec",
+        min_value=0,
+        max_value=59,
+        value=0,
+        step=1,
+        label_visibility="collapsed"
+    )
+
+with col_btn:
+    run = st.button("Predict")
 
 run = st.button("Predict", type="primary", use_container_width=True)
 
