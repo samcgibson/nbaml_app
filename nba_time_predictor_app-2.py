@@ -259,7 +259,7 @@ col_game, col_model, col_min, col_sec, col_btn = st.columns([2.4, 1, 1, 1, 1])
 
 with col_game:
     game_id = st.selectbox(
-        "Game",
+        "Game, Final Score, Date",
         options=test_ids,
         format_func=lambda gid: f"{game_matchups.get(gid, gid)} | {game_scores.get(gid, '')} | {game_dates.get(gid, '')}",
         label_visibility="collapsed"
@@ -274,7 +274,7 @@ with col_model:
 
 with col_min:
     minutes_remaining = st.number_input(
-        "Min",
+        "Min remaining",
         min_value=0,
         max_value=12,
         value=4,
@@ -284,7 +284,7 @@ with col_min:
 
 with col_sec:
     seconds_remaining = st.number_input(
-        "Sec",
+        "Sec remaining",
         min_value=0,
         max_value=59,
         value=0,
