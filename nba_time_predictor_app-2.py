@@ -17,10 +17,6 @@ st.set_page_config(
     layout="centered",
 )
 
-# ---------------------------------------------------------------------------
-# Data loading & model training — cached so it only runs once per session
-# ---------------------------------------------------------------------------
-
 @st.cache_resource(show_spinner=False)
 def load_data_and_train():
     import gdown
@@ -107,25 +103,24 @@ def load_data_and_train():
     q4[TARGET]   = q4["duration"] - q4["seconds_elapsed"]
     q4           = q4[q4[TARGET] >= 0]
     
-    # We add game_id to model_df so we can split by game
+
     model_df     = q4[["game_id"] + FEATURES + [TARGET]].dropna()
 
     margin_bucket = pd.cut(model_df["scoring_margin"], bins=[-1, 5, 15, 100], labels=[0, 1, 2])
     valid_idx     = margin_bucket.notna() & model_df[TARGET].notna()
     
-    # Filter only valid rows
+
     model_df = model_df.loc[valid_idx]
     
     X = model_df[FEATURES]
     y = model_df[TARGET]
     game_ids_valid = model_df["game_id"]
 
-    # Ensure entire games are put into train or test, avoiding data leakage 
-    # and ensuring there are actually untouched games to select from.
+
     unique_games = game_ids_valid.unique()
     train_games, test_games = train_test_split(unique_games, test_size=0.20, random_state=42)
 
-    # Filter data based on the game-level split
+
     train_mask = game_ids_valid.isin(train_games)
     X_train, y_train = X[train_mask], y[train_mask]
 
@@ -139,7 +134,7 @@ def load_data_and_train():
                                random_state=42, n_jobs=-1)
     rf.fit(X_train, y_train)
 
-    # Return train_games alongside the other items
+
     return pbp, rf, lr, scaler, FEATURES, set(train_games)
 
 
@@ -199,16 +194,11 @@ def predict(pbp, rf, lr, scaler, FEATURES, game_id, minutes_remaining, seconds_r
     }, None
 
 
-# ---------------------------------------------------------------------------
-# UI
-# ---------------------------------------------------------------------------
-
-
 st.title("NBA Q4 Time Remaining Predictor")
 st.caption("Predict how much real time is left based on game-clock position and live context.")
 
 with st.spinner("Loading data and training models — this takes ~30 seconds the first time…"):
-    # Unpack the set of training games
+
     pbp, rf, lr, scaler, FEATURES, train_games = load_data_and_train()
 
 if "loaded" not in st.session_state:
@@ -228,7 +218,7 @@ game_matchups = (
 pbp["game_date"] = pd.to_datetime(pbp["timeActual"]).dt.date
 
 game_dates = pbp.groupby("game_id")["game_date"].first().to_dict()
-#format as MM/DD
+
 game_dates = {gid: date.strftime("%m/%d") for gid, date in game_dates.items()}
 
 final_scores = (
@@ -253,7 +243,6 @@ h2.caption("Model")
 h3.caption("Min")
 h4.caption("Sec")
 h5.caption("")
-# --- COMPACT CONTROL BAR ---
 
 col_game, col_model, col_min, col_sec, col_btn = st.columns([2.4, 1, 1, 1, 1])
 
@@ -308,7 +297,6 @@ if run:
     else:
         st.divider()
 
-        # --- COMPACT RESULTS UI ---
 
         def fmt(secs):
             m, s = divmod(int(secs), 60)
@@ -316,7 +304,6 @@ if run:
 
         top1, top2 = st.columns([1, 1])
 
-        # LEFT: Game context
         with top1:
             st.markdown("### Game Context")
 
@@ -330,7 +317,6 @@ if run:
 
             st.metric("Real/Clock", f"{result['real_vs_clock']:.2f}×")
 
-        # RIGHT: Prediction
         with top2:
             st.markdown("### Prediction")
 
@@ -341,10 +327,8 @@ if run:
             err = result["error_secs"]
             st.metric("Error", f"{err:+.0f}s")
 
-        # BOTTOM: slim progress bar
         clock_left = minutes_remaining * 60 + seconds_remaining
         st.progress((720 - clock_left) / 720)
 
-        # Footer (tiny)
         st.caption(f"{model.upper()} · {game_matchups.get(game_id, game_id)}")
 
