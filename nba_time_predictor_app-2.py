@@ -221,7 +221,12 @@ all_ids = pbp["game_id"].unique().tolist()
 test_ids = [gid for gid in all_ids if gid not in train_games]
 
 col_id, col_model = st.columns([1, 1])
-
+h1, h2, h3, h4, h5 = st.columns([3, 1.5, 1, 1, 1])
+h1.caption("Game")
+h2.caption("Model")
+h3.caption("Min")
+h4.caption("Sec")
+h5.caption("")
 # --- COMPACT CONTROL BAR ---
 
 col_game, col_model, col_min, col_sec, col_btn = st.columns([3, 1.5, 1, 1, 1])
