@@ -228,6 +228,8 @@ game_matchups = (
 pbp["game_date"] = pd.to_datetime(pbp["timeActual"]).dt.date
 
 game_dates = pbp.groupby("game_id")["game_date"].first().to_dict()
+#format as MM/DD
+game_dates = {gid: date.strftime("%m/%d") for gid, date in game_dates.items()}
 
 final_scores = (
     pbp.sort_values("seconds_elapsed")
@@ -259,7 +261,7 @@ with col_game:
     game_id = st.selectbox(
         "Game",
         options=test_ids,
-        format_func=lambda gid: f"{game_matchups.get(gid, gid)} | {game_scores.get(gid, '')}",
+        format_func=lambda gid: f"{game_matchups.get(gid, gid)} | {game_scores.get(gid, '')} | {game_dates.get(gid, '')}",
         label_visibility="collapsed"
     )
 with col_model:
