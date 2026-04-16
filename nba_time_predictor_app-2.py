@@ -217,7 +217,7 @@ game_matchups = (
     .to_dict()
 )
 
-col_id, col_model = st.columns([2, 1])
+col_id, col_model = st.columns([1, 1])
 
 with col_id:
     all_ids = pbp["game_id"].unique().tolist()
