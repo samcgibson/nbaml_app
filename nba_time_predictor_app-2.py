@@ -217,6 +217,10 @@ game_matchups = (
     .to_dict()
 )
 
+pbp["game_date"] = pd.to_datetime(pbp["timeActual"]).dt.date
+
+game_dates = pbp.groupby("game_id")["game_date"].first().to_dict()
+
 all_ids = pbp["game_id"].unique().tolist()
 test_ids = [gid for gid in all_ids if gid not in train_games]
 
@@ -235,7 +239,7 @@ with col_game:
     game_id = st.selectbox(
         "Game",
         options=test_ids,
-        format_func=lambda gid: game_matchups.get(gid, gid),
+        format_func=lambda gid: f"{game_matchups.get(gid, gid)} | {game_dates.get(gid, '')}",
         label_visibility="collapsed"
     )
 
