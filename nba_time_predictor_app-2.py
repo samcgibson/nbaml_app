@@ -209,7 +209,6 @@ with st.spinner("Loading data and training models — this takes ~30 seconds the
     pbp, rf, lr, scaler, FEATURES, train_games = load_data_and_train()
 
 st.success(f"Ready — {pbp['game_id'].nunique():,} games loaded.", icon="✅")
-st.divider()
 
 game_matchups = (
     pbp.groupby("game_id")["teamTricode"]
