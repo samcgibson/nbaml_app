@@ -239,7 +239,7 @@ with col_model:
         format_func=lambda x: "Random Forest" if x == "rf" else "Ridge Regression",
     )
 
-col_min, col_sec = st.columns(2)
+col_id, col_model, col_min, col_sec = st.columns([2, 1, 1, 1])
 with col_min:
     minutes_remaining = st.number_input("Minutes left (Q4)", min_value=0, max_value=12, value=4, step=1)
 with col_sec:
