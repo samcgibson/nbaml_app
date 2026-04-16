@@ -268,7 +268,7 @@ with col_model:
     model = st.selectbox(
         "Model",
         options=["lr", "rf"],
-        format_func=lambda x: "Ridge" if x == "lr" else "Random Forest",
+        format_func=lambda x: "Ridge" if x == "lr" else "RF",
         label_visibility="collapsed"
     )
 
