@@ -9,7 +9,8 @@ from sklearn.ensemble        import RandomForestRegressor
 from sklearn.linear_model    import Ridge
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing   import StandardScaler
-from sklearn.tree import export_text
+import matplotlib.pyplot as plt
+from sklearn.tree import plot_tree
 
 st.set_page_config(
     page_title="NBA Time Remaining Predictor",
@@ -195,29 +196,49 @@ def predict(pbp, rf, lr, scaler, FEATURES, game_id, minutes_remaining, seconds_r
         "pred_remaining":   pred_remaining,
         "actual_remaining": actual_remaining,
         "error_secs":       pred_remaining - actual_remaining,
+        'X_input': X_input,
     }, None
 
-def ridge_equation(lr, FEATURES, top_k=10):
-    intercept = lr.intercept_
+def ridge_explanation(lr, FEATURES, X_input):
+    intercept = float(lr.intercept_)
     coefs = lr.coef_
+    x = X_input.iloc[0]
 
-    idx = np.argsort(np.abs(coefs))[::-1][:top_k]
+    lines = []
+    total = intercept
 
-    terms = []
-    for i in idx:
-        f = FEATURES[i]
-        c = coefs[i]
-        sign = "+" if c >= 0 else "-"
-        terms.append(f"{sign} {abs(c):.3f}·{f}")
+    lines.append(f"ŷ = {intercept:.2f}")
 
-    return "ŷ = " + f"{intercept:.2f} " + " ".join(terms)
+    for f, c in zip(FEATURES, coefs):
+        contrib = c * x[f]
+        total += contrib
 
-def rf_tree_rules(rf, FEATURES, max_depth=3):
-    # take one tree from the forest
+        sign = "+" if contrib >= 0 else "-"
+        lines.append(
+            f"{sign} ({abs(c):.4f} × {x[f]:.4f}) = {contrib:+.2f}   [{f}]"
+        )
+
+    lines.append("\nFINAL PREDICTION:")
+    lines.append(f"ŷ = {total:.2f} seconds")
+
+    return "\n".join(lines)
+
+def plot_rf_tree(rf, FEATURES, max_depth=3):
     tree = rf.estimators_[0]
 
-    rules = export_text(tree, feature_names=FEATURES, max_depth=max_depth)
-    return rules
+    fig, ax = plt.subplots(figsize=(20, 10))
+
+    plot_tree(
+        tree,
+        feature_names=FEATURES,
+        filled=True,
+        rounded=True,
+        max_depth=max_depth,
+        fontsize=10,
+        ax=ax
+    )
+
+    return fig
 
 # ---------------------------------------------------------------------------
 # UI
@@ -365,16 +386,15 @@ if run:
 
         if model == "lr":
             st.divider()
-            st.subheader("Ridge Regression Equation")
+            st.subheader("Ridge Regression — Plugged-in Equation")
 
-            eq = ridge_equation(lr, FEATURES)
+            explanation = ridge_explanation(lr, FEATURES, result["X_input"])
 
-            st.code(eq, language="text")
+            st.code(explanation, language="text")
 
         if model == "rf":
             st.divider()
-            st.subheader("Random Forest (Example Tree Rules)")
+            st.subheader("Random Forest (Tree Visualization)")
 
-            rules = rf_tree_rules(rf, FEATURES, max_depth=3)
-
-            st.code(rules, language="text")
+            fig = plot_rf_tree(rf, FEATURES, max_depth=3)
+            st.pyplot(fig)
