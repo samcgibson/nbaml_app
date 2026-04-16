@@ -221,6 +221,18 @@ pbp["game_date"] = pd.to_datetime(pbp["timeActual"]).dt.date
 
 game_dates = pbp.groupby("game_id")["game_date"].first().to_dict()
 
+final_scores = (
+    pbp.sort_values("seconds_elapsed")
+    .groupby("game_id")
+    .tail(1)
+)
+
+game_scores = (
+    final_scores.set_index("game_id")
+    .apply(lambda r: f"{int(r['scoreHome'])}-{int(r['scoreAway'])}", axis=1)
+    .to_dict()
+)
+
 all_ids = pbp["game_id"].unique().tolist()
 test_ids = [gid for gid in all_ids if gid not in train_games]
 
@@ -239,10 +251,13 @@ with col_game:
     game_id = st.selectbox(
         "Game",
         options=test_ids,
-        format_func=lambda gid: f"{game_matchups.get(gid, gid)} | {game_dates.get(gid, '')}",
+        format_func=lambda gid: (
+            f"{game_dates.get(gid, '')} | "
+            f"{game_matchups.get(gid, gid)} | "
+            f"Final: {game_scores.get(gid, '')}"
+        ),
         label_visibility="collapsed"
     )
-
 with col_model:
     model = st.selectbox(
         "Model",
@@ -317,7 +332,7 @@ if run:
             p2.metric("Actual", fmt(result["actual_remaining"]))
 
             err = result["error_secs"]
-            st.metric("Error", f"{err:+.0f}s", delta=f"{err/60:+.1f} min", delta_color="inverse")
+            st.metric("Error", f"{err:+.0f}s", delta=f"{err/60:+.1f} min")
 
         # BOTTOM: slim progress bar
         clock_left = minutes_remaining * 60 + seconds_remaining
