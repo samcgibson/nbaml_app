@@ -245,17 +245,13 @@ h4.caption("Sec")
 h5.caption("")
 # --- COMPACT CONTROL BAR ---
 
-col_game, col_model, col_min, col_sec, col_btn = st.columns([3, 1.5, 1, 1, 1])
+col_game, col_model, col_min, col_sec, col_btn = st.columns([2, 1, 1, 1, 1])
 
 with col_game:
     game_id = st.selectbox(
         "Game",
         options=test_ids,
-        format_func=lambda gid: (
-            f"{game_dates.get(gid, '')} | "
-            f"{game_matchups.get(gid, gid)} | "
-            f"Final: {game_scores.get(gid, '')}"
-        ),
+        format_func=lambda gid: f"{game_matchups.get(gid, gid)} | {game_scores.get(gid, '')}",
         label_visibility="collapsed"
     )
 with col_model:
