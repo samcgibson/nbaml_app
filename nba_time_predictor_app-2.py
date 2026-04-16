@@ -200,6 +200,22 @@ def predict(pbp, rf, lr, scaler, FEATURES, game_id, minutes_remaining, seconds_r
 # ---------------------------------------------------------------------------
 # UI
 # ---------------------------------------------------------------------------
+def get_feature_importance_table(model_name, rf, lr, scaler, FEATURES):
+    if model_name == "lr":
+        coefs = lr.coef_
+        importance = pd.DataFrame({
+            "feature": FEATURES,
+            "weight": coefs
+        }).sort_values("weight", key=abs, ascending=False)
+
+    else:
+        importance = pd.DataFrame({
+            "feature": FEATURES,
+            "importance": rf.feature_importances_
+        }).sort_values("importance", ascending=False)
+
+    return importance
+
 
 st.title("🏀 NBA Q4 Time Remaining Predictor")
 st.caption("Predict how much real time is left based on game-clock position and live context.")
@@ -285,6 +301,24 @@ with col_sec:
 with col_btn:
     run = st.button("Predict")
 
+c1, c2 = st.columns(2)
+
+with c1:
+    st.markdown("### Ridge Weights")
+    st.dataframe(
+        get_feature_importance_table("lr", rf, lr, scaler, FEATURES),
+        use_container_width=True,
+        hide_index=True
+    )
+
+with c2:
+    st.markdown("### RF Importance")
+    st.dataframe(
+        get_feature_importance_table("rf", rf, lr, scaler, FEATURES),
+        use_container_width=True,
+        hide_index=True
+    )
+
 if run:
     with st.spinner("Running prediction…"):
         result, err_msg = predict(
@@ -336,3 +370,14 @@ if run:
 
         # Footer (tiny)
         st.caption(f"{model.upper()} · {game_matchups.get(game_id, game_id)}")
+
+        st.divider()
+        st.subheader("Feature Importance")
+
+        importance_df = get_feature_importance_table(model, rf, lr, scaler, FEATURES)
+
+        st.dataframe(
+            importance_df,
+            use_container_width=True,
+            hide_index=True
+        )
