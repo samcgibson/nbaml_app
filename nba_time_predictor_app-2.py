@@ -199,23 +199,26 @@ def predict(pbp, rf, lr, scaler, FEATURES, game_id, minutes_remaining, seconds_r
         'X_input': X_input,
     }, None
 
-def ridge_explanation(lr, FEATURES, X_input):
-    intercept = float(lr.intercept_)
+def ridge_explanation_correct(lr, scaler, FEATURES, X_input):
+    import numpy as np
+
+    x_raw = X_input.iloc[0].values
+    x_scaled = scaler.transform(X_input)[0]
+
     coefs = lr.coef_
-    x = X_input.iloc[0]
+    intercept = lr.intercept_
 
     lines = []
     total = intercept
 
     lines.append(f"ŷ = {intercept:.2f}")
 
-    for f, c in zip(FEATURES, coefs):
-        contrib = c * x[f]
+    for i, f in enumerate(FEATURES):
+        contrib = coefs[i] * x_scaled[i]
         total += contrib
 
-        sign = "+" if contrib >= 0 else "-"
         lines.append(
-            f"{sign} ({abs(c):.4f} × {x[f]:.4f}) = {contrib:+.2f}   [{f}]"
+            f"{coefs[i]:.4f} × (scaled {f} = {x_scaled[i]:.3f}) = {contrib:+.2f}"
         )
 
     lines.append("\nFINAL PREDICTION:")
