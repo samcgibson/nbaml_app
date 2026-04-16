@@ -199,49 +199,6 @@ def predict(pbp, rf, lr, scaler, FEATURES, game_id, minutes_remaining, seconds_r
         'X_input': X_input,
     }, None
 
-def ridge_explanation_correct(lr, scaler, FEATURES, X_input):
-    import numpy as np
-
-    x_raw = X_input.iloc[0].values
-    x_scaled = scaler.transform(X_input)[0]
-
-    coefs = lr.coef_
-    intercept = lr.intercept_
-
-    lines = []
-    total = intercept
-
-    lines.append(f"ŷ = {intercept:.2f}")
-
-    for i, f in enumerate(FEATURES):
-        contrib = coefs[i] * x_scaled[i]
-        total += contrib
-
-        lines.append(
-            f"{coefs[i]:.4f} × (scaled {f} = {x_scaled[i]:.3f}) = {contrib:+.2f}"
-        )
-
-    lines.append("\nFINAL PREDICTION:")
-    lines.append(f"ŷ = {total:.2f} seconds")
-
-    return "\n".join(lines)
-
-def plot_rf_tree(rf, FEATURES, max_depth=3):
-    tree = rf.estimators_[0]
-
-    fig, ax = plt.subplots(figsize=(20, 10))
-
-    plot_tree(
-        tree,
-        feature_names=FEATURES,
-        filled=True,
-        rounded=True,
-        max_depth=max_depth,
-        fontsize=10,
-        ax=ax
-    )
-
-    return fig
 
 # ---------------------------------------------------------------------------
 # UI
@@ -332,8 +289,6 @@ with col_sec:
 with col_btn:
     run = st.button("Predict")
 
-c1, c2 = st.columns(2)
-
 
 if run:
     with st.spinner("Running prediction…"):
@@ -387,17 +342,3 @@ if run:
         # Footer (tiny)
         st.caption(f"{model.upper()} · {game_matchups.get(game_id, game_id)}")
 
-        if model == "lr":
-            st.divider()
-            st.subheader("Ridge Regression — Plugged-in Equation")
-
-            explanation = ridge_explanation(lr, FEATURES, result["X_input"])
-
-            st.code(explanation, language="text")
-
-        if model == "rf":
-            st.divider()
-            st.subheader("Random Forest (Tree Visualization)")
-
-            fig = plot_rf_tree(rf, FEATURES, max_depth=3)
-            st.pyplot(fig)
