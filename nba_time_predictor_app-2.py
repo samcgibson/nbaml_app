@@ -9,6 +9,7 @@ from sklearn.ensemble        import RandomForestRegressor
 from sklearn.linear_model    import Ridge
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing   import StandardScaler
+from sklearn.tree import export_text
 
 st.set_page_config(
     page_title="NBA Time Remaining Predictor",
@@ -196,25 +197,31 @@ def predict(pbp, rf, lr, scaler, FEATURES, game_id, minutes_remaining, seconds_r
         "error_secs":       pred_remaining - actual_remaining,
     }, None
 
+def ridge_equation(lr, FEATURES, top_k=10):
+    intercept = lr.intercept_
+    coefs = lr.coef_
+
+    idx = np.argsort(np.abs(coefs))[::-1][:top_k]
+
+    terms = []
+    for i in idx:
+        f = FEATURES[i]
+        c = coefs[i]
+        sign = "+" if c >= 0 else "-"
+        terms.append(f"{sign} {abs(c):.3f}·{f}")
+
+    return "ŷ = " + f"{intercept:.2f} " + " ".join(terms)
+
+def rf_tree_rules(rf, FEATURES, max_depth=3):
+    # take one tree from the forest
+    tree = rf.estimators_[0]
+
+    rules = export_text(tree, feature_names=FEATURES, max_depth=max_depth)
+    return rules
 
 # ---------------------------------------------------------------------------
 # UI
 # ---------------------------------------------------------------------------
-def get_feature_importance_table(model_name, rf, lr, scaler, FEATURES):
-    if model_name == "lr":
-        coefs = lr.coef_
-        importance = pd.DataFrame({
-            "feature": FEATURES,
-            "weight": coefs
-        }).sort_values("weight", key=abs, ascending=False)
-
-    else:
-        importance = pd.DataFrame({
-            "feature": FEATURES,
-            "importance": rf.feature_importances_
-        }).sort_values("importance", ascending=False)
-
-    return importance
 
 
 st.title("🏀 NBA Q4 Time Remaining Predictor")
@@ -303,21 +310,6 @@ with col_btn:
 
 c1, c2 = st.columns(2)
 
-with c1:
-    st.markdown("### Ridge Weights")
-    st.dataframe(
-        get_feature_importance_table("lr", rf, lr, scaler, FEATURES),
-        use_container_width=True,
-        hide_index=True
-    )
-
-with c2:
-    st.markdown("### RF Importance")
-    st.dataframe(
-        get_feature_importance_table("rf", rf, lr, scaler, FEATURES),
-        use_container_width=True,
-        hide_index=True
-    )
 
 if run:
     with st.spinner("Running prediction…"):
@@ -371,13 +363,18 @@ if run:
         # Footer (tiny)
         st.caption(f"{model.upper()} · {game_matchups.get(game_id, game_id)}")
 
-        st.divider()
-        st.subheader("Feature Importance")
+        if model == "lr":
+            st.divider()
+            st.subheader("Ridge Regression Equation")
 
-        importance_df = get_feature_importance_table(model, rf, lr, scaler, FEATURES)
+            eq = ridge_equation(lr, FEATURES)
 
-        st.dataframe(
-            importance_df,
-            use_container_width=True,
-            hide_index=True
-        )
+            st.code(eq, language="text")
+
+        if model == "rf":
+            st.divider()
+            st.subheader("Random Forest (Example Tree Rules)")
+
+            rules = rf_tree_rules(rf, FEATURES, max_depth=3)
+
+            st.code(rules, language="text")
