@@ -212,8 +212,13 @@ with st.spinner("Loading data and training models — this takes ~30 seconds the
     # Unpack the set of training games
     pbp, rf, lr, scaler, FEATURES, train_games = load_data_and_train()
 
-st.success(f"Ready — {pbp['game_id'].nunique():,} games loaded.", icon="✅")
+if "loaded" not in st.session_state:
+    st.session_state.loaded = False
 
+if not st.session_state.loaded:
+    st.success(f"Ready — {pbp['game_id'].nunique():,} games loaded.", icon="✅")
+    st.session_state.loaded = True
+    
 game_matchups = (
     pbp.groupby("game_id")["teamTricode"]
     .apply(lambda x: sorted(set(x.dropna().astype(str))))
