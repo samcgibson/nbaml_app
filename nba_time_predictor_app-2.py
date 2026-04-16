@@ -204,7 +204,7 @@ def predict(pbp, rf, lr, scaler, FEATURES, game_id, minutes_remaining, seconds_r
 # ---------------------------------------------------------------------------
 
 
-st.title("🏀 NBA Q4 Time Remaining Predictor")
+st.title("NBA Q4 Time Remaining Predictor")
 st.caption("Predict how much real time is left based on game-clock position and live context.")
 
 with st.spinner("Loading data and training models — this takes ~30 seconds the first time…"):
@@ -337,7 +337,7 @@ if run:
             p2.metric("Actual", fmt(result["actual_remaining"]))
 
             err = result["error_secs"]
-            st.metric("Error", f"{err:+.0f}s", delta=f"{err/60:+.1f} min")
+            st.metric("Error", f"{err:+.0f}s", delta_color="inverse" if abs(err) < 30 else "off")
 
         # BOTTOM: slim progress bar
         clock_left = minutes_remaining * 60 + seconds_remaining
