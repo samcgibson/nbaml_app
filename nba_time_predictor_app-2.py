@@ -259,32 +259,42 @@ if run:
     else:
         st.divider()
 
+        # --- COMPACT RESULTS UI ---
+
         def fmt(secs):
             m, s = divmod(int(secs), 60)
-            return f"{m}m {s:02d}s"
+            return f"{m}:{s:02d}"
 
-        st.subheader("Game context")
-        c1, c2, c3, c4 = st.columns(4)
-        c1.metric("Score margin",          f"{result['scoring_margin']} pts")
-        c2.metric("Clutch?",               "Yes ✓" if result["is_clutch"] else "No")
-        c3.metric("Fouls (last 4 min)",    result["foul_last4"])
-        c4.metric("Timeouts (last 4 min)", result["timeout_last4"])
-        st.metric("Real / clock ratio", f"{result['real_vs_clock']:.2f}×",
-                  help="How much real time passes per second of game clock.")
+        top1, top2 = st.columns([1, 1])
 
-        st.divider()
-        st.subheader("Prediction")
+        # LEFT: Game context
+        with top1:
+            st.markdown("### Game Context")
 
-        p1, p2, p3 = st.columns(3)
-        p1.metric("Predicted remaining", fmt(result["pred_remaining"]))
-        p2.metric("Actual remaining",    fmt(result["actual_remaining"]))
+            c1, c2 = st.columns(2)
+            c1.metric("Margin", f"{result['scoring_margin']} pts")
+            c2.metric("Clutch", "Yes" if result["is_clutch"] else "No")
 
-        err = result["error_secs"]
-        p3.metric("Error", f"{err:+.0f}s ({err/60:+.1f} min)", delta_color="inverse")
+            c3, c4 = st.columns(2)
+            c3.metric("Fouls (L4M)", result["foul_last4"])
+            c4.metric("Timeouts (L4M)", result["timeout_last4"])
 
-        st.caption("Q4 clock position")
+            st.metric("Real/Clock", f"{result['real_vs_clock']:.2f}×")
+
+        # RIGHT: Prediction
+        with top2:
+            st.markdown("### Prediction")
+
+            p1, p2 = st.columns(2)
+            p1.metric("Predicted", fmt(result["pred_remaining"]))
+            p2.metric("Actual", fmt(result["actual_remaining"]))
+
+            err = result["error_secs"]
+            st.metric("Error", f"{err:+.0f}s", delta=f"{err/60:+.1f} min", delta_color="inverse")
+
+        # BOTTOM: slim progress bar
         clock_left = minutes_remaining * 60 + seconds_remaining
         st.progress((720 - clock_left) / 720)
 
-        st.divider()
-        st.caption(f"Model: **{model.upper()}** · Game ID: `{game_id}`")
+        # Footer (tiny)
+        st.caption(f"{model.upper()} · {game_matchups.get(game_id, game_id)}")
